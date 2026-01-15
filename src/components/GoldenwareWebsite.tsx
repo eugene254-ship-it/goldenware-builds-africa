@@ -1,7 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Droplet, Hammer, Shield, Globe } from "lucide-react";
+import Header from "@/components/Header";
+import ContactModal from "@/components/ContactModal";
+import ProjectsGallery from "@/components/ProjectsGallery";
+import heroImage from "@/assets/hero-infrastructure.jpg";
 
 const pillars = [
   {
@@ -47,6 +52,8 @@ const staggerContainer = {
 };
 
 export default function GoldenwareWebsite() {
+  const [isContactOpen, setIsContactOpen] = useState(false);
+
   const track = (event: string, props: Record<string, string> = {}) => {
     if (typeof window !== "undefined") {
       const w = window as typeof window & { plausible?: (event: string, options: { props: Record<string, string> }) => void; gtag?: (command: string, event: string, props: Record<string, string>) => void };
@@ -59,12 +66,25 @@ export default function GoldenwareWebsite() {
     }
   };
 
+  const handleContactClick = () => {
+    setIsContactOpen(true);
+    track("contact_modal_open");
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <Header onContactClick={handleContactClick} />
+      <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
+
       {/* HERO */}
-      <section className="relative flex items-center justify-center text-center px-6 py-32 md:py-44 overflow-hidden">
-        {/* Subtle background gradient */}
-        <div className="absolute inset-0 bg-gradient-to-b from-gold/5 via-transparent to-transparent pointer-events-none" />
+      <section className="relative flex items-center justify-center text-center px-6 pt-32 pb-32 md:pt-44 md:pb-44 overflow-hidden min-h-screen">
+        {/* Hero background image */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${heroImage})` }}
+        />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background" />
         
         <motion.div 
           initial={{ opacity: 0, y: 30 }} 
@@ -81,7 +101,7 @@ export default function GoldenwareWebsite() {
             Goldenware
           </motion.h1>
           <motion.p 
-            className="text-xl md:text-2xl text-muted-foreground mb-10 max-w-2xl mx-auto"
+            className="text-xl md:text-2xl text-foreground/80 mb-10 max-w-2xl mx-auto"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
@@ -97,14 +117,17 @@ export default function GoldenwareWebsite() {
             <Button 
               size="lg" 
               className="glow-gold"
-              onClick={() => track("cta_partner_click", { location: "hero" })}
+              onClick={() => {
+                handleContactClick();
+                track("cta_partner_click", { location: "hero" });
+              }}
             >
               Partner With Us
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="border-border hover:border-gold/50 hover:bg-gold/5"
+              className="border-border hover:border-gold/50 hover:bg-gold/5 bg-background/50 backdrop-blur-sm"
               onClick={() => track("view_charter_click", { location: "hero" })}
             >
               View Our Charter
@@ -125,8 +148,8 @@ export default function GoldenwareWebsite() {
         </motion.p>
       </section>
 
-      {/* VALUE PILLARS */}
-      <section className="py-24 md:py-32 px-6">
+      {/* ABOUT / VALUE PILLARS */}
+      <section id="about" className="py-24 md:py-32 px-6">
         <div className="max-w-7xl mx-auto">
           <motion.h2 
             className="text-3xl md:text-4xl font-bold mb-16 text-center"
@@ -180,8 +203,8 @@ export default function GoldenwareWebsite() {
         </motion.div>
       </section>
 
-      {/* USE CASES */}
-      <section className="py-24 md:py-32 px-6">
+      {/* SERVICES / USE CASES */}
+      <section id="services" className="py-24 md:py-32 px-6">
         <div className="max-w-6xl mx-auto">
           <motion.h2 
             className="text-3xl md:text-4xl font-bold mb-16 text-center"
@@ -215,8 +238,11 @@ export default function GoldenwareWebsite() {
         </div>
       </section>
 
+      {/* PROJECTS GALLERY */}
+      <ProjectsGallery />
+
       {/* CTA */}
-      <section className="py-32 md:py-40 bg-secondary text-center px-6 relative overflow-hidden">
+      <section id="contact" className="py-32 md:py-40 bg-secondary text-center px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-gold/5 via-transparent to-transparent pointer-events-none" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
@@ -233,7 +259,10 @@ export default function GoldenwareWebsite() {
           <Button 
             size="lg" 
             className="glow-gold text-lg px-8 py-6"
-            onClick={() => track("cta_start_conversation", { location: "footer_cta" })}
+            onClick={() => {
+              handleContactClick();
+              track("cta_start_conversation", { location: "footer_cta" });
+            }}
           >
             Start a Conversation
           </Button>
