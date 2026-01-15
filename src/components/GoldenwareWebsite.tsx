@@ -6,6 +6,8 @@ import { Droplet, Hammer, Shield, Globe } from "lucide-react";
 import Header from "@/components/Header";
 import ContactModal from "@/components/ContactModal";
 import ProjectsGallery from "@/components/ProjectsGallery";
+import TeamSection from "@/components/TeamSection";
+import TestimonialsSection from "@/components/TestimonialsSection";
 import heroImage from "@/assets/hero-infrastructure.jpg";
 
 const pillars = [
@@ -128,7 +130,10 @@ export default function GoldenwareWebsite() {
               size="lg" 
               variant="outline"
               className="border-border hover:border-gold/50 hover:bg-gold/5 bg-background/50 backdrop-blur-sm"
-              onClick={() => track("view_charter_click", { location: "hero" })}
+              onClick={() => {
+                window.location.href = '/charter';
+                track("view_charter_click", { location: "hero" });
+              }}
             >
               View Our Charter
             </Button>
@@ -240,6 +245,12 @@ export default function GoldenwareWebsite() {
 
       {/* PROJECTS GALLERY */}
       <ProjectsGallery />
+
+      {/* TEAM SECTION */}
+      <TeamSection />
+
+      {/* TESTIMONIALS */}
+      <TestimonialsSection />
 
       {/* CTA */}
       <section id="contact" className="py-32 md:py-40 bg-secondary text-center px-6 relative overflow-hidden">

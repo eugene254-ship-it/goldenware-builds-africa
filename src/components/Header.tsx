@@ -2,21 +2,25 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Link, useLocation } from "react-router-dom";
 
 interface HeaderProps {
   onContactClick: () => void;
 }
 
 const navLinks = [
-  { label: "About", href: "#about" },
-  { label: "Services", href: "#services" },
-  { label: "Projects", href: "#projects" },
-  { label: "Contact", href: "#contact" },
+  { label: "About", href: "#about", isSection: true },
+  { label: "Services", href: "#services", isSection: true },
+  { label: "Projects", href: "#projects", isSection: true },
+  { label: "Charter", href: "/charter", isSection: false },
+  { label: "Pricing", href: "/pricing", isSection: false },
 ];
 
 export default function Header({ onContactClick }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
+  const isHomePage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
@@ -26,10 +30,17 @@ export default function Header({ onContactClick }: HeaderProps) {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
+  const handleNavClick = (href: string, isSection: boolean) => {
+    if (isSection) {
+      if (!isHomePage) {
+        // Navigate to home first, then scroll
+        window.location.href = `/${href}`;
+      } else {
+        const element = document.querySelector(href);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }
     }
     setIsMobileMenuOpen(false);
   };
@@ -47,23 +58,33 @@ export default function Header({ onContactClick }: HeaderProps) {
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
-        <button
-          onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        <Link
+          to="/"
           className="text-2xl font-bold text-gradient-gold tracking-tight hover:opacity-80 transition-opacity"
         >
           Goldenware
-        </button>
+        </Link>
 
         {/* Desktop Nav */}
         <nav className="hidden md:flex items-center gap-8">
           {navLinks.map((link) => (
-            <button
-              key={link.href}
-              onClick={() => scrollToSection(link.href)}
-              className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
-            >
-              {link.label}
-            </button>
+            link.isSection ? (
+              <button
+                key={link.href}
+                onClick={() => handleNavClick(link.href, link.isSection)}
+                className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+              >
+                {link.label}
+              </button>
+            ) : (
+              <Link
+                key={link.href}
+                to={link.href}
+                className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+              >
+                {link.label}
+              </Link>
+            )
           ))}
           <Button size="sm" onClick={onContactClick} className="glow-gold">
             Partner With Us
@@ -89,13 +110,24 @@ export default function Header({ onContactClick }: HeaderProps) {
         >
           <nav className="flex flex-col p-6 gap-4">
             {navLinks.map((link) => (
-              <button
-                key={link.href}
-                onClick={() => scrollToSection(link.href)}
-                className="text-foreground hover:text-gold transition-colors text-left py-2 text-lg font-medium"
-              >
-                {link.label}
-              </button>
+              link.isSection ? (
+                <button
+                  key={link.href}
+                  onClick={() => handleNavClick(link.href, link.isSection)}
+                  className="text-foreground hover:text-gold transition-colors text-left py-2 text-lg font-medium"
+                >
+                  {link.label}
+                </button>
+              ) : (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="text-foreground hover:text-gold transition-colors text-left py-2 text-lg font-medium"
+                >
+                  {link.label}
+                </Link>
+              )
             ))}
             <Button onClick={onContactClick} className="glow-gold mt-2">
               Partner With Us
