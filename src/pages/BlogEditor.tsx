@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
@@ -10,13 +10,14 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { ArrowLeft, Loader2, Save, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Trash2, Upload, Image, Bell } from 'lucide-react';
 
 export default function BlogEditor() {
   const { id } = useParams();
   const isNew = id === 'new';
   const navigate = useNavigate();
   const { user, isAdmin, isLoading: authLoading } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [title, setTitle] = useState('');
   const [slug, setSlug] = useState('');
@@ -24,8 +25,11 @@ export default function BlogEditor() {
   const [content, setContent] = useState('');
   const [coverImage, setCoverImage] = useState('');
   const [published, setPublished] = useState(false);
+  const [wasPublished, setWasPublished] = useState(false);
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isNotifying, setIsNotifying] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -55,6 +59,7 @@ export default function BlogEditor() {
       setContent(data.content);
       setCoverImage(data.cover_image || '');
       setPublished(data.published);
+      setWasPublished(data.published);
     } catch (error) {
       console.error('Error fetching post:', error);
       toast.error('Failed to load post');
@@ -75,6 +80,47 @@ export default function BlogEditor() {
     setTitle(value);
     if (isNew) {
       setSlug(generateSlug(value));
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setIsUploading(true);
+
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+      const filePath = `covers/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('blog-images')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('blog-images')
+        .getPublicUrl(filePath);
+
+      setCoverImage(publicUrl);
+      toast.success('Image uploaded successfully');
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -118,6 +164,32 @@ export default function BlogEditor() {
       }
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const handleNotifySubscribers = async () => {
+    if (!id || isNew) return;
+
+    setIsNotifying(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('notify-subscribers', {
+        body: {
+          post_id: id,
+          title,
+          excerpt: excerpt || '',
+          slug
+        }
+      });
+
+      if (error) throw error;
+
+      toast.success(data.message || 'Subscribers notified!');
+    } catch (error: any) {
+      console.error('Error notifying subscribers:', error);
+      toast.error('Failed to notify subscribers');
+    } finally {
+      setIsNotifying(false);
     }
   };
 
@@ -178,6 +250,22 @@ export default function BlogEditor() {
             </h1>
           </div>
           <div className="flex items-center gap-2">
+            {!isNew && published && (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={handleNotifySubscribers}
+                disabled={isNotifying}
+                className="border-gold/30 hover:border-gold"
+              >
+                {isNotifying ? (
+                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                ) : (
+                  <Bell size={16} className="mr-2" />
+                )}
+                Notify Subscribers
+              </Button>
+            )}
             {!isNew && (
               <Button variant="destructive" size="sm" onClick={handleDelete}>
                 <Trash2 size={16} className="mr-2" />
@@ -231,14 +319,49 @@ export default function BlogEditor() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="coverImage">Cover Image URL</Label>
-                <Input
-                  id="coverImage"
-                  value={coverImage}
-                  onChange={(e) => setCoverImage(e.target.value)}
-                  placeholder="https://example.com/image.jpg"
-                  className="bg-secondary border-border"
-                />
+                <Label>Cover Image</Label>
+                <div className="flex gap-4">
+                  <div className="flex-1">
+                    <Input
+                      value={coverImage}
+                      onChange={(e) => setCoverImage(e.target.value)}
+                      placeholder="https://example.com/image.jpg or upload"
+                      className="bg-secondary border-border"
+                    />
+                  </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={isUploading}
+                    className="border-border"
+                  >
+                    {isUploading ? (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    ) : (
+                      <Upload size={16} />
+                    )}
+                  </Button>
+                </div>
+                {coverImage && (
+                  <div className="mt-3 relative aspect-video max-w-sm rounded-lg overflow-hidden border border-border">
+                    <img
+                      src={coverImage}
+                      alt="Cover preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.display = 'none';
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <div className="space-y-2">

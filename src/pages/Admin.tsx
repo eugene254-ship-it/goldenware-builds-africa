@@ -28,7 +28,8 @@ import {
   LogOut,
   Calendar,
   Building,
-  Plus
+  Plus,
+  Shield
 } from 'lucide-react';
 import { format } from 'date-fns';
 
@@ -49,14 +50,24 @@ interface BlogPost {
   created_at: string;
 }
 
+interface Subscriber {
+  id: string;
+  email: string;
+  name: string | null;
+  verified: boolean;
+  created_at: string;
+}
+
 export default function Admin() {
   const { user, isAdmin, isLoading: authLoading, signOut } = useAuth();
   const navigate = useNavigate();
   const [submissions, setSubmissions] = useState<ContactSubmission[]>([]);
   const [blogPosts, setBlogPosts] = useState<BlogPost[]>([]);
+  const [subscribers, setSubscribers] = useState<Subscriber[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
+  const [isSettingUpAdmin, setIsSettingUpAdmin] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -90,11 +101,43 @@ export default function Admin() {
 
       if (blogError) throw blogError;
       setBlogPosts(blogData || []);
+
+      // Fetch subscribers
+      const { data: subData, error: subError } = await supabase
+        .from('subscribers')
+        .select('id, email, name, verified, created_at')
+        .is('unsubscribed_at', null)
+        .order('created_at', { ascending: false });
+
+      if (subError) throw subError;
+      setSubscribers(subData || []);
     } catch (error) {
       console.error('Error fetching data:', error);
       toast.error('Failed to load data');
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSetupFirstAdmin = async () => {
+    setIsSettingUpAdmin(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('setup-first-admin');
+      
+      if (error) throw error;
+
+      if (data.isAdmin) {
+        toast.success(data.message);
+        // Reload the page to refresh auth context
+        window.location.reload();
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error: any) {
+      console.error('Error setting up admin:', error);
+      toast.error('Failed to set up admin');
+    } finally {
+      setIsSettingUpAdmin(false);
     }
   };
 
@@ -153,14 +196,33 @@ export default function Admin() {
       <div className="min-h-screen bg-background flex items-center justify-center px-6">
         <Card className="max-w-md w-full bg-card border-border">
           <CardContent className="pt-6 text-center">
-            <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <h2 className="text-xl font-semibold mb-2">Access Denied</h2>
-            <p className="text-muted-foreground mb-4">
-              You don't have admin privileges to access this page.
+            <Shield className="h-12 w-12 text-gold mx-auto mb-4" />
+            <h2 className="text-xl font-semibold mb-2">Admin Access Required</h2>
+            <p className="text-muted-foreground mb-6">
+              You need admin privileges to access this page.
             </p>
-            <Button onClick={() => navigate('/')} variant="outline">
-              Return Home
-            </Button>
+            <div className="space-y-3">
+              <Button 
+                onClick={handleSetupFirstAdmin} 
+                disabled={isSettingUpAdmin}
+                className="w-full glow-gold"
+              >
+                {isSettingUpAdmin ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Setting up...
+                  </>
+                ) : (
+                  'Become First Admin'
+                )}
+              </Button>
+              <Button onClick={() => navigate('/')} variant="outline" className="w-full">
+                Return Home
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground mt-4">
+              Only works if no admin exists yet
+            </p>
           </CardContent>
         </Card>
       </div>
@@ -198,11 +260,11 @@ export default function Admin() {
           transition={{ duration: 0.5 }}
         >
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
             <Card className="bg-card border-border">
               <CardHeader className="flex flex-row items-center justify-between pb-2">
                 <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Total Submissions
+                  Contact Submissions
                 </CardTitle>
                 <Mail className="h-4 w-4 text-gold" />
               </CardHeader>
@@ -234,12 +296,24 @@ export default function Admin() {
                 </div>
               </CardContent>
             </Card>
+            <Card className="bg-card border-border">
+              <CardHeader className="flex flex-row items-center justify-between pb-2">
+                <CardTitle className="text-sm font-medium text-muted-foreground">
+                  Subscribers
+                </CardTitle>
+                <Users className="h-4 w-4 text-gold" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-3xl font-bold">{subscribers.length}</div>
+              </CardContent>
+            </Card>
           </div>
 
           <Tabs defaultValue="submissions" className="space-y-6">
             <TabsList className="bg-secondary">
               <TabsTrigger value="submissions">Contact Submissions</TabsTrigger>
               <TabsTrigger value="blog">Blog Posts</TabsTrigger>
+              <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
             </TabsList>
 
             <TabsContent value="submissions" className="space-y-4">
@@ -385,6 +459,52 @@ export default function Admin() {
                               <Button asChild variant="ghost" size="sm">
                                 <Link to={`/admin/blog/${post.id}`}>Edit</Link>
                               </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                      </TableBody>
+                    </Table>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="subscribers" className="space-y-4">
+              <h2 className="text-lg font-semibold">Email Subscribers</h2>
+
+              <Card className="bg-card border-border">
+                <CardContent className="p-0">
+                  {isLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <Loader2 className="h-6 w-6 animate-spin text-gold" />
+                    </div>
+                  ) : subscribers.length === 0 ? (
+                    <div className="text-center py-12 text-muted-foreground">
+                      <Users className="h-12 w-12 mx-auto mb-4 opacity-50" />
+                      <p>No subscribers yet</p>
+                    </div>
+                  ) : (
+                    <Table>
+                      <TableHeader>
+                        <TableRow className="border-border hover:bg-secondary/50">
+                          <TableHead>Email</TableHead>
+                          <TableHead>Name</TableHead>
+                          <TableHead>Status</TableHead>
+                          <TableHead>Subscribed</TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {subscribers.map((sub) => (
+                          <TableRow key={sub.id} className="border-border hover:bg-secondary/50">
+                            <TableCell className="font-medium">{sub.email}</TableCell>
+                            <TableCell>{sub.name || <span className="text-muted-foreground">—</span>}</TableCell>
+                            <TableCell>
+                              <Badge variant={sub.verified ? 'default' : 'secondary'} className={sub.verified ? 'bg-green-600' : ''}>
+                                {sub.verified ? 'Verified' : 'Pending'}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-muted-foreground">
+                              {format(new Date(sub.created_at), 'MMM d, yyyy')}
                             </TableCell>
                           </TableRow>
                         ))}

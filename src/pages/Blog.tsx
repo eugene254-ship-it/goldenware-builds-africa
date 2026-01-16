@@ -5,9 +5,11 @@ import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import ContactModal from '@/components/ContactModal';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Calendar, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2, Calendar, ArrowRight, Mail } from 'lucide-react';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 interface BlogPost {
   id: string;
@@ -37,6 +39,8 @@ export default function Blog() {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isContactOpen, setIsContactOpen] = useState(false);
+  const [email, setEmail] = useState('');
+  const [isSubscribing, setIsSubscribing] = useState(false);
 
   useEffect(() => {
     fetchPosts();
@@ -56,6 +60,29 @@ export default function Blog() {
       console.error('Error fetching posts:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email.trim()) return;
+
+    setIsSubscribing(true);
+
+    try {
+      const { data, error } = await supabase.functions.invoke('subscribe', {
+        body: { email: email.trim() }
+      });
+
+      if (error) throw error;
+
+      toast.success(data.message || 'Successfully subscribed!');
+      setEmail('');
+    } catch (error: any) {
+      console.error('Subscribe error:', error);
+      toast.error('Failed to subscribe. Please try again.');
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
@@ -84,6 +111,47 @@ export default function Blog() {
             Updates on our projects, industry insights, and stories from the field
           </motion.p>
         </div>
+      </section>
+
+      {/* Subscribe Section */}
+      <section className="pb-16 px-6">
+        <motion.div
+          className="max-w-xl mx-auto"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+        >
+          <Card className="bg-card border-border">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="p-2 bg-gold/10 rounded-lg">
+                  <Mail className="h-5 w-5 text-gold" />
+                </div>
+                <div>
+                  <h3 className="font-semibold">Subscribe to Updates</h3>
+                  <p className="text-sm text-muted-foreground">Get notified when we publish new posts</p>
+                </div>
+              </div>
+              <form onSubmit={handleSubscribe} className="flex gap-2">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="bg-secondary border-border flex-1"
+                />
+                <Button type="submit" disabled={isSubscribing} className="glow-gold">
+                  {isSubscribing ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    'Subscribe'
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
+        </motion.div>
       </section>
 
       {/* Posts Grid */}

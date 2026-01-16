@@ -113,6 +113,36 @@ export type Database = {
         }
         Relationships: []
       }
+      subscribers: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          name: string | null
+          unsubscribed_at: string | null
+          verification_token: string | null
+          verified: boolean
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          name?: string | null
+          unsubscribed_at?: string | null
+          verification_token?: string | null
+          verified?: boolean
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          name?: string | null
+          unsubscribed_at?: string | null
+          verification_token?: string | null
+          verified?: boolean
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
