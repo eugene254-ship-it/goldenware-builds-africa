@@ -14,6 +14,7 @@ const navLinks = [
   { label: "Projects", href: "#projects", isSection: true },
   { label: "Charter", href: "/charter", isSection: false },
   { label: "Pricing", href: "/pricing", isSection: false },
+  { label: "Blog", href: "/blog", isSection: false },
 ];
 
 export default function Header({ onContactClick }: HeaderProps) {
