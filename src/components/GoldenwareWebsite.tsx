@@ -2,13 +2,18 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Droplet, Hammer, Shield, Globe } from "lucide-react";
+import { Droplet, Hammer, Shield, Globe, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import ContactModal from "@/components/ContactModal";
 import ProjectsGallery from "@/components/ProjectsGallery";
 import TeamSection from "@/components/TeamSection";
 import TestimonialsSection from "@/components/TestimonialsSection";
+import StatsSection from "@/components/StatsSection";
+import FAQSection from "@/components/FAQSection";
+import Footer from "@/components/Footer";
+import SectionHeader from "@/components/layout/SectionHeader";
 import heroImage from "@/assets/hero-infrastructure.jpg";
+import { fadeInUp, staggerContainer, viewportOnce } from "@/lib/animations";
 
 const pillars = [
   {
@@ -34,24 +39,22 @@ const pillars = [
 ];
 
 const useCases = [
-  "Urban Housing & Water",
-  "County Infrastructure", 
-  "Off-Grid & Climate Zones"
-];
-
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 }
-};
-
-const staggerContainer = {
-  animate: {
-    transition: {
-      staggerChildren: 0.1
-    }
+  {
+    title: "Urban Housing & Water",
+    description: "Modern plumbing, water harvesting, and sustainable materials for urban developments.",
+    features: ["Smart water metering", "Rainwater harvesting", "Greywater recycling"]
+  },
+  {
+    title: "County Infrastructure", 
+    description: "Large-scale water and sanitation systems for county governments and institutions.",
+    features: ["Public water systems", "School sanitation", "Healthcare facilities"]
+  },
+  {
+    title: "Off-Grid & Climate Zones",
+    description: "Resilient solutions for remote communities and challenging environments.",
+    features: ["Solar-powered pumps", "Drought-resistant storage", "Mobile solutions"]
   }
-};
+];
 
 export default function GoldenwareWebsite() {
   const [isContactOpen, setIsContactOpen] = useState(false);
@@ -85,8 +88,10 @@ export default function GoldenwareWebsite() {
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
           style={{ backgroundImage: `url(${heroImage})` }}
         />
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/70 to-background" />
+        {/* Dark overlay with gradient */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
+        {/* Radial gold accent */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--gold)/0.05)_0%,_transparent_70%)]" />
         
         <motion.div 
           initial={{ opacity: 0, y: 30 }} 
@@ -94,6 +99,15 @@ export default function GoldenwareWebsite() {
           transition={{ duration: 0.8, ease: "easeOut" }} 
           className="max-w-4xl relative z-10"
         >
+          <motion.div
+            className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-gold/10 border border-gold/20"
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.2 }}
+          >
+            <span className="text-gold text-sm font-medium font-sans tracking-wide">Since 2013 · Nairobi, Kenya</span>
+          </motion.div>
+          
           <motion.h1 
             className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-6 text-gradient-gold"
             initial={{ opacity: 0, scale: 0.95 }}
@@ -103,7 +117,7 @@ export default function GoldenwareWebsite() {
             Goldenware
           </motion.h1>
           <motion.p 
-            className="text-xl md:text-2xl text-foreground/80 mb-10 max-w-2xl mx-auto"
+            className="text-xl md:text-2xl lg:text-3xl text-foreground/80 mb-10 max-w-2xl mx-auto font-sans"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3, duration: 0.8 }}
@@ -118,18 +132,19 @@ export default function GoldenwareWebsite() {
           >
             <Button 
               size="lg" 
-              className="glow-gold"
+              className="glow-gold text-base px-8"
               onClick={() => {
                 handleContactClick();
                 track("cta_partner_click", { location: "hero" });
               }}
             >
               Partner With Us
+              <ArrowRight className="ml-2" size={18} />
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="border-border hover:border-gold/50 hover:bg-gold/5 bg-background/50 backdrop-blur-sm"
+              className="border-border hover:border-gold/50 hover:bg-gold/5 bg-background/50 backdrop-blur-sm text-base"
               onClick={() => {
                 window.location.href = '/charter';
                 track("view_charter_click", { location: "hero" });
@@ -139,47 +154,52 @@ export default function GoldenwareWebsite() {
             </Button>
           </motion.div>
         </motion.div>
+        
+        {/* Scroll indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 1.2 }}
+        >
+          <motion.div 
+            className="w-6 h-10 rounded-full border-2 border-foreground/20 flex justify-center pt-2"
+            animate={{ y: [0, 5, 0] }}
+            transition={{ repeat: Infinity, duration: 1.5 }}
+          >
+            <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+          </motion.div>
+        </motion.div>
       </section>
 
-      {/* TRUST SIGNAL */}
-      <section className="py-12 md:py-16 bg-secondary text-center border-y border-border">
-        <motion.p 
-          className="uppercase tracking-[0.2em] text-sm text-muted-foreground font-medium"
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-        >
-          Since 2013 · Kenya · Infrastructure Stewardship
-        </motion.p>
-      </section>
+      {/* STATS */}
+      <StatsSection />
 
       {/* ABOUT / VALUE PILLARS */}
-      <section id="about" className="py-24 md:py-32 px-6">
+      <section id="about" className="section-padding px-6">
         <div className="max-w-7xl mx-auto">
-          <motion.h2 
-            className="text-3xl md:text-4xl font-bold mb-16 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            What We <span className="text-gradient-gold">Steward</span>
-          </motion.h2>
+          <SectionHeader
+            title="What We"
+            titleAccent="Steward"
+            description="Four pillars guide everything we build — from material selection to community impact."
+          />
+          
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
-            viewport={{ once: true }}
+            viewport={viewportOnce}
           >
             {pillars.map((item, i) => (
               <motion.div key={i} variants={fadeInUp}>
-                <Card className="bg-card border-border h-full hover:border-gold/30 transition-colors duration-300 group">
+                <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group card-shadow hover:card-shadow-hover">
                   <CardContent className="p-6 md:p-8">
                     <div className="mb-5 text-gold group-hover:scale-110 transition-transform duration-300 inline-block">
-                      <item.icon size={32} strokeWidth={1.5} />
+                      <item.icon size={36} strokeWidth={1.5} />
                     </div>
                     <h3 className="text-xl font-semibold mb-3 text-foreground">{item.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">{item.text}</p>
+                    <p className="text-muted-foreground leading-relaxed font-sans">{item.text}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -189,52 +209,70 @@ export default function GoldenwareWebsite() {
       </section>
 
       {/* MANIFESTO */}
-      <section className="py-24 md:py-32 px-6 bg-gradient-to-b from-background via-secondary/30 to-background">
+      <section className="section-padding px-6 bg-gradient-to-b from-background via-secondary/30 to-background relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(var(--gold)/0.03)_0%,_transparent_50%)]" />
         <motion.div 
-          className="max-w-3xl mx-auto text-center"
+          className="max-w-3xl mx-auto text-center relative z-10"
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={viewportOnce}
           transition={{ duration: 0.8 }}
         >
           <h2 className="text-3xl md:text-5xl font-bold mb-8">Our Mandate</h2>
-          <p className="text-muted-foreground text-lg md:text-xl leading-relaxed">
+          <p className="text-muted-foreground text-lg md:text-xl leading-relaxed font-sans">
             We treat materials as <span className="text-gold font-medium">trust</span>, water as{" "}
             <span className="text-gold font-medium">life</span>, and infrastructure as{" "}
             <span className="text-gold font-medium">destiny</span>.
             Goldenware exists to steward matter, skills, and systems so African communities
             can build resilient futures that endure.
           </p>
+          <div className="mt-10 flex justify-center gap-4 flex-wrap">
+            <div className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans">
+              ISO 9001 Certified
+            </div>
+            <div className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans">
+              NCA Class 4
+            </div>
+            <div className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans">
+              KEBS Approved
+            </div>
+          </div>
         </motion.div>
       </section>
 
       {/* SERVICES / USE CASES */}
-      <section id="services" className="py-24 md:py-32 px-6">
+      <section id="services" className="section-padding px-6">
         <div className="max-w-6xl mx-auto">
-          <motion.h2 
-            className="text-3xl md:text-4xl font-bold mb-16 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-          >
-            Where We Build
-          </motion.h2>
+          <SectionHeader
+            title="Where We"
+            titleAccent="Build"
+            description="Integrated hardware, water systems, and fabrication tailored to local realities."
+          />
+          
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
             variants={staggerContainer}
             initial="initial"
             whileInView="animate"
-            viewport={{ once: true }}
+            viewport={viewportOnce}
           >
-            {useCases.map((title, i) => (
+            {useCases.map((useCase, i) => (
               <motion.div key={i} variants={fadeInUp}>
-                <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group hover:-translate-y-1">
+                <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group hover:-translate-y-1 card-shadow hover:card-shadow-hover">
                   <CardContent className="p-8 md:p-10">
                     <div className="w-12 h-1 bg-gold mb-6 group-hover:w-20 transition-all duration-300" />
-                    <h3 className="text-xl md:text-2xl font-semibold mb-4 text-foreground">{title}</h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      Integrated hardware, water systems, and fabrication tailored to local realities.
+                    <h3 className="text-xl md:text-2xl font-semibold mb-4 text-foreground">{useCase.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed mb-6 font-sans">
+                      {useCase.description}
                     </p>
+                    <ul className="space-y-2">
+                      {useCase.features.map((feature, j) => (
+                        <li key={j} className="flex items-center gap-2 text-sm text-muted-foreground font-sans">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                          {feature}
+                        </li>
+                      ))}
+                    </ul>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -247,45 +285,50 @@ export default function GoldenwareWebsite() {
       <ProjectsGallery />
 
       {/* TEAM SECTION */}
-      <TeamSection />
+      <div id="team">
+        <TeamSection />
+      </div>
 
       {/* TESTIMONIALS */}
-      <TestimonialsSection />
+      <div id="testimonials">
+        <TestimonialsSection />
+      </div>
+
+      {/* FAQ */}
+      <FAQSection />
 
       {/* CTA */}
       <section id="contact" className="py-32 md:py-40 bg-secondary text-center px-6 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-gold/5 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--gold)/0.08)_0%,_transparent_60%)]" />
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
+          viewport={viewportOnce}
           transition={{ duration: 0.8 }}
-          className="relative z-10"
+          className="relative z-10 max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">Build With Foresight</h2>
-          <p className="text-muted-foreground mb-10 max-w-2xl mx-auto text-lg md:text-xl">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Build With Foresight</h2>
+          <p className="text-muted-foreground mb-10 text-lg md:text-xl leading-relaxed font-sans">
             Whether you are a county, builder, investor, or community — partner with a steward,
             not just a supplier.
           </p>
           <Button 
             size="lg" 
-            className="glow-gold text-lg px-8 py-6"
+            className="glow-gold text-lg px-10 py-6"
             onClick={() => {
               handleContactClick();
               track("cta_start_conversation", { location: "footer_cta" });
             }}
           >
             Start a Conversation
+            <ArrowRight className="ml-2" size={20} />
           </Button>
         </motion.div>
       </section>
 
       {/* FOOTER */}
-      <footer className="py-12 text-center border-t border-border">
-        <p className="text-muted-foreground text-sm">
-          © {new Date().getFullYear()} Goldenware Enterprises Ltd · Kenya
-        </p>
-      </footer>
+      <Footer />
     </div>
   );
 }

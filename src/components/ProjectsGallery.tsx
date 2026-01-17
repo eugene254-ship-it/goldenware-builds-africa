@@ -1,95 +1,103 @@
 import { motion } from "framer-motion";
-import projectHousing from "@/assets/project-housing.jpg";
+import { MapPin, ArrowUpRight } from "lucide-react";
+import SectionHeader from "@/components/layout/SectionHeader";
+import OptimizedImage from "@/components/ui/optimized-image";
+import { fadeInUp, staggerContainer, viewportOnce } from "@/lib/animations";
+
 import projectWater from "@/assets/project-water.jpg";
+import projectHousing from "@/assets/project-housing.jpg";
+import projectSchool from "@/assets/project-school.jpg";
 import projectOffgrid from "@/assets/project-offgrid.jpg";
 import projectMaterials from "@/assets/project-materials.jpg";
-import projectSchool from "@/assets/project-school.jpg";
 
 const projects = [
-  {
-    image: projectHousing,
-    title: "Nairobi Urban Housing",
-    location: "Nairobi County",
-    description: "Multi-story residential with integrated rainwater harvesting systems.",
-  },
   {
     image: projectWater,
     title: "Makueni Water Project",
     location: "Makueni County",
-    description: "County-wide water storage and distribution infrastructure.",
+    description: "Community water harvesting and distribution system serving 5,000+ residents.",
+    category: "Water Infrastructure"
   },
   {
-    image: projectOffgrid,
-    title: "Turkana Solar Water",
-    location: "Turkana County",
-    description: "Off-grid solar-powered water pumping for remote communities.",
-  },
-  {
-    image: projectMaterials,
-    title: "Materials Hub",
-    location: "Mombasa",
-    description: "Regional distribution center for climate-fit building materials.",
+    image: projectHousing,
+    title: "Affordable Housing Initiative",
+    location: "Nairobi",
+    description: "Sustainable plumbing and water systems for 200 residential units.",
+    category: "Urban Development"
   },
   {
     image: projectSchool,
-    title: "Kisumu School Complex",
-    location: "Kisumu County",
-    description: "Educational facility with complete water and sanitation systems.",
+    title: "Rural School Sanitation",
+    location: "Kitui County",
+    description: "Complete sanitation facilities for 15 rural schools, impacting 3,000 students.",
+    category: "Education"
+  },
+  {
+    image: projectOffgrid,
+    title: "Off-Grid Water Solutions",
+    location: "Turkana County",
+    description: "Solar-powered borehole systems for pastoralist communities.",
+    category: "Off-Grid"
+  },
+  {
+    image: projectMaterials,
+    title: "Material Innovation Lab",
+    location: "Machakos",
+    description: "Research and fabrication of climate-resilient building materials.",
+    category: "R&D"
   },
 ];
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-  transition: { duration: 0.6 },
-};
-
 export default function ProjectsGallery() {
   return (
-    <section id="projects" className="py-24 md:py-32 px-6 bg-secondary/30">
+    <section id="projects" className="section-padding px-6 bg-secondary/30">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Our <span className="text-gradient-gold">Projects</span>
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Infrastructure that endures across Kenya's diverse landscapes and communities.
-          </p>
-        </motion.div>
+        <SectionHeader
+          title="Our"
+          titleAccent="Projects"
+          description="Infrastructure that endures across Kenya's diverse landscapes and communities."
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={viewportOnce}
+        >
           {projects.map((project, i) => (
             <motion.div
               key={i}
               variants={fadeInUp}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-              className="group relative overflow-hidden rounded-lg bg-card border border-border hover:border-gold/30 transition-all duration-300"
+              className="group relative overflow-hidden rounded-xl bg-card border border-border hover:border-gold/30 transition-all duration-300 card-shadow hover:card-shadow-hover"
             >
-              <div className="aspect-[4/3] overflow-hidden">
-                <img
+              <div className="relative overflow-hidden">
+                <OptimizedImage
                   src={project.image}
                   alt={project.title}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  aspectRatio="wide"
+                  className="group-hover:scale-105 transition-transform duration-700"
                 />
+                {/* Category badge */}
+                <div className="absolute top-4 left-4 px-3 py-1 bg-background/80 backdrop-blur-sm rounded-full">
+                  <span className="text-xs font-medium text-gold font-sans">{project.category}</span>
+                </div>
+                {/* Hover arrow */}
+                <div className="absolute top-4 right-4 w-10 h-10 rounded-full bg-gold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-300 transform translate-y-2 group-hover:translate-y-0">
+                  <ArrowUpRight size={18} className="text-background" />
+                </div>
               </div>
               <div className="p-6">
-                <p className="text-gold text-sm font-medium mb-2">{project.location}</p>
+                <div className="flex items-center gap-1.5 text-gold text-sm font-medium mb-2 font-sans">
+                  <MapPin size={14} />
+                  {project.location}
+                </div>
                 <h3 className="text-xl font-semibold text-foreground mb-2">{project.title}</h3>
-                <p className="text-muted-foreground text-sm">{project.description}</p>
+                <p className="text-muted-foreground text-sm leading-relaxed font-sans">{project.description}</p>
               </div>
-              {/* Hover overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-background/90 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none" />
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

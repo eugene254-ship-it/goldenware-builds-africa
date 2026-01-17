@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700;800&display=swap');
 
 @layer base {
   :root {
@@ -40,7 +40,18 @@
     --gold: 43 96% 56%;
     --gold-dark: 43 90% 45%;
     --gold-glow: 43 100% 65%;
+    --gold-muted: 43 60% 40%;
     --surface-elevated: 0 0% 10%;
+    
+    /* Spacing tokens */
+    --section-py: 6rem;
+    --section-py-lg: 8rem;
+    
+    /* Shadow tokens */
+    --shadow-gold: 0 0 40px -10px hsl(var(--gold) / 0.4);
+    --shadow-gold-intense: 0 0 60px -5px hsl(var(--gold) / 0.5);
+    --shadow-card: 0 4px 24px -4px hsl(0 0% 0% / 0.4);
+    --shadow-card-hover: 0 8px 32px -4px hsl(0 0% 0% / 0.5);
   }
 
   .dark {
@@ -75,6 +86,10 @@
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', sans-serif;
   }
+  
+  h1, h2, h3 {
+    font-family: 'Playfair Display', serif;
+  }
 }
 
 @layer utilities {
@@ -84,6 +99,73 @@
   }
   
   .glow-gold {
-    box-shadow: 0 0 40px -10px hsl(var(--gold) / 0.4);
+    box-shadow: var(--shadow-gold);
+    @apply transition-shadow duration-300;
   }
+  
+  .glow-gold:hover {
+    box-shadow: var(--shadow-gold-intense);
+  }
+  
+  .card-shadow {
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-shadow-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+  
+  /* Animated underline for links */
+  .link-underline {
+    @apply relative;
+  }
+  
+  .link-underline::after {
+    content: '';
+    @apply absolute bottom-0 left-0 w-0 h-px bg-gold transition-all duration-300;
+  }
+  
+  .link-underline:hover::after {
+    @apply w-full;
+  }
+  
+  /* Section spacing utility */
+  .section-padding {
+    padding-top: var(--section-py);
+    padding-bottom: var(--section-py);
+  }
+  
+  @media (min-width: 768px) {
+    .section-padding {
+      padding-top: var(--section-py-lg);
+      padding-bottom: var(--section-py-lg);
+    }
+  }
+  
+  /* Gold border glow */
+  .border-gold-glow {
+    @apply border-gold/30;
+    box-shadow: inset 0 0 20px -10px hsl(var(--gold) / 0.2);
+  }
+  
+  /* Smooth image loading */
+  .img-loading {
+    @apply bg-muted animate-pulse;
+  }
+  
+  /* Counter animation */
+  @keyframes countUp {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .animate-count {
+    animation: countUp 0.6s ease-out forwards;
+  }
+  
+  /* Stagger delay utilities */
+  .delay-100 { animation-delay: 100ms; }
+  .delay-200 { animation-delay: 200ms; }
+  .delay-300 { animation-delay: 300ms; }
+  .delay-400 { animation-delay: 400ms; }
 }
