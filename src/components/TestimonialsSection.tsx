@@ -1,86 +1,91 @@
 import { motion } from "framer-motion";
-import { Quote } from "lucide-react";
+import { Quote, Star } from "lucide-react";
+import SectionHeader from "@/components/layout/SectionHeader";
+import { fadeInUp, staggerContainer, viewportOnce } from "@/lib/animations";
 
 const testimonials = [
   {
-    quote: "Goldenware transformed our county's water infrastructure. Their attention to quality and local skills development has set a new standard for public works in Kenya.",
-    author: "Dr. Peter Mutua",
-    role: "County Executive, Makueni",
-    organization: "Makueni County Government",
+    quote: "Goldenware transformed our county's approach to water infrastructure. Their systems are still running flawlessly after 5 years.",
+    author: "Governor James Muturi",
+    role: "County Executive",
+    organization: "Makueni County",
+    rating: 5
   },
   {
-    quote: "As a developer, working with Goldenware gave us confidence that our buildings would stand the test of time. Their material expertise is unmatched.",
-    author: "Faith Karanja",
-    role: "Managing Director",
-    organization: "Nairobi Urban Developers",
-  },
-  {
-    quote: "The solar water pumping systems they installed for our community have been life-changing. Clean water, powered by the sun, maintained by local technicians.",
-    author: "Joseph Ekai",
-    role: "Community Elder",
-    organization: "Turkana Community Initiative",
-  },
-  {
-    quote: "Goldenware's approach to infrastructure is what Africa needs — sustainable, locally-driven, and built for the future. They're true partners.",
-    author: "Sarah Oduya",
-    role: "Regional Director",
+    quote: "The quality of materials and craftsmanship exceeded our expectations. They truly understand what it means to build for the long term.",
+    author: "Dr. Sarah Kimani",
+    role: "Program Director",
     organization: "UN-Habitat Kenya",
+    rating: 5
+  },
+  {
+    quote: "Working with Goldenware was a partnership, not just a contract. They trained our local teams and ensured knowledge transfer.",
+    author: "Peter Ndegwa",
+    role: "Community Leader",
+    organization: "Kitui Rural Development",
+    rating: 5
+  },
+  {
+    quote: "Their innovative approach to off-grid water solutions has changed lives in our remote communities.",
+    author: "Mary Wambui",
+    role: "Regional Coordinator",
+    organization: "World Vision Kenya",
+    rating: 5
   },
 ];
 
-const fadeInUp = {
-  initial: { opacity: 0, y: 30 },
-  animate: { opacity: 1, y: 0 },
-};
-
 export default function TestimonialsSection() {
   return (
-    <section className="py-24 md:py-32 px-6">
+    <section className="section-padding px-6">
       <div className="max-w-7xl mx-auto">
-        <motion.div
-          className="text-center mb-16"
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Trusted by <span className="text-gradient-gold">Partners</span>
-          </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto text-lg">
-            Hear from the counties, communities, and organizations we serve.
-          </p>
-        </motion.div>
+        <SectionHeader
+          title="Trusted by"
+          titleAccent="Partners"
+          description="Hear from the counties, communities, and organizations we serve."
+        />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-2 gap-6 lg:gap-8"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={viewportOnce}
+        >
           {testimonials.map((testimonial, i) => (
             <motion.div
               key={i}
               variants={fadeInUp}
-              initial="initial"
-              whileInView="animate"
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1, duration: 0.6 }}
-              className="bg-card border border-border rounded-xl p-8 relative hover:border-gold/30 transition-colors duration-300"
+              className="bg-card border border-border rounded-xl p-8 relative hover:border-gold/30 transition-all duration-300 card-shadow hover:card-shadow-hover group"
             >
-              <Quote className="absolute top-6 right-6 text-gold/20" size={48} />
-              <p className="text-foreground/90 text-lg leading-relaxed mb-6 relative z-10">
+              {/* Quote icon */}
+              <Quote className="absolute top-6 right-6 text-gold/10 group-hover:text-gold/20 transition-colors" size={56} />
+              
+              {/* Rating */}
+              <div className="flex gap-1 mb-4">
+                {[...Array(testimonial.rating)].map((_, j) => (
+                  <Star key={j} size={16} className="text-gold fill-gold" />
+                ))}
+              </div>
+              
+              <p className="text-foreground/90 text-lg leading-relaxed mb-6 relative z-10 font-sans">
                 "{testimonial.quote}"
               </p>
+              
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-full bg-gold/20 flex items-center justify-center">
-                  <span className="text-gold font-bold text-lg">
+                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-gold to-gold-dark flex items-center justify-center">
+                  <span className="text-background font-bold text-lg font-sans">
                     {testimonial.author.split(' ').map(n => n[0]).join('')}
                   </span>
                 </div>
                 <div>
-                  <p className="font-semibold text-foreground">{testimonial.author}</p>
-                  <p className="text-sm text-muted-foreground">{testimonial.role}</p>
-                  <p className="text-sm text-gold">{testimonial.organization}</p>
+                  <p className="font-semibold text-foreground font-sans">{testimonial.author}</p>
+                  <p className="text-sm text-muted-foreground font-sans">{testimonial.role}</p>
+                  <p className="text-sm text-gold font-sans">{testimonial.organization}</p>
                 </div>
               </div>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   );

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 
@@ -20,21 +20,37 @@ const navLinks = [
 export default function Header({ onContactClick }: HeaderProps) {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [activeSection, setActiveSection] = useState<string | null>(null);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
 
   useEffect(() => {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 50);
+      
+      // Track active section for highlighting
+      if (isHomePage) {
+        const sections = ["about", "services", "projects", "team", "testimonials", "faq", "contact"];
+        for (const section of sections) {
+          const el = document.getElementById(section);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= 100 && rect.bottom >= 100) {
+              setActiveSection(`#${section}`);
+              break;
+            }
+          }
+        }
+      }
     };
+    
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isHomePage]);
 
   const handleNavClick = (href: string, isSection: boolean) => {
     if (isSection) {
       if (!isHomePage) {
-        // Navigate to home first, then scroll
         window.location.href = `/${href}`;
       } else {
         const element = document.querySelector(href);
@@ -67,13 +83,19 @@ export default function Header({ onContactClick }: HeaderProps) {
         </Link>
 
         {/* Desktop Nav */}
-        <nav className="hidden md:flex items-center gap-8">
-          {navLinks.map((link) => (
-            link.isSection ? (
+        <nav className="hidden md:flex items-center gap-1">
+          {navLinks.map((link) => {
+            const isActive = isHomePage && activeSection === link.href;
+            
+            return link.isSection ? (
               <button
                 key={link.href}
                 onClick={() => handleNavClick(link.href, link.isSection)}
-                className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 font-sans ${
+                  isActive 
+                    ? "text-gold bg-gold/10" 
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
               >
                 {link.label}
               </button>
@@ -81,13 +103,17 @@ export default function Header({ onContactClick }: HeaderProps) {
               <Link
                 key={link.href}
                 to={link.href}
-                className="text-muted-foreground hover:text-foreground transition-colors text-sm font-medium"
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 font-sans ${
+                  location.pathname === link.href
+                    ? "text-gold bg-gold/10"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                }`}
               >
                 {link.label}
               </Link>
-            )
-          ))}
-          <Button size="sm" onClick={onContactClick} className="glow-gold">
+            );
+          })}
+          <Button size="sm" onClick={onContactClick} className="glow-gold ml-4">
             Partner With Us
           </Button>
         </nav>
@@ -95,47 +121,51 @@ export default function Header({ onContactClick }: HeaderProps) {
         {/* Mobile Menu Button */}
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="md:hidden text-foreground p-2"
+          className="md:hidden text-foreground p-2 rounded-lg hover:bg-muted transition-colors"
+          aria-label="Toggle menu"
         >
           {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
         </button>
       </div>
 
       {/* Mobile Menu */}
-      {isMobileMenuOpen && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-card border-t border-border"
-        >
-          <nav className="flex flex-col p-6 gap-4">
-            {navLinks.map((link) => (
-              link.isSection ? (
-                <button
-                  key={link.href}
-                  onClick={() => handleNavClick(link.href, link.isSection)}
-                  className="text-foreground hover:text-gold transition-colors text-left py-2 text-lg font-medium"
-                >
-                  {link.label}
-                </button>
-              ) : (
-                <Link
-                  key={link.href}
-                  to={link.href}
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  className="text-foreground hover:text-gold transition-colors text-left py-2 text-lg font-medium"
-                >
-                  {link.label}
-                </Link>
-              )
-            ))}
-            <Button onClick={onContactClick} className="glow-gold mt-2">
-              Partner With Us
-            </Button>
-          </nav>
-        </motion.div>
-      )}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden bg-card border-t border-border overflow-hidden"
+          >
+            <nav className="flex flex-col p-6 gap-2">
+              {navLinks.map((link) => (
+                link.isSection ? (
+                  <button
+                    key={link.href}
+                    onClick={() => handleNavClick(link.href, link.isSection)}
+                    className="text-foreground hover:text-gold hover:bg-muted/50 transition-colors text-left py-3 px-4 rounded-lg text-lg font-medium font-sans"
+                  >
+                    {link.label}
+                  </button>
+                ) : (
+                  <Link
+                    key={link.href}
+                    to={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-foreground hover:text-gold hover:bg-muted/50 transition-colors text-left py-3 px-4 rounded-lg text-lg font-medium font-sans"
+                  >
+                    {link.label}
+                  </Link>
+                )
+              ))}
+              <Button onClick={onContactClick} className="glow-gold mt-4">
+                Partner With Us
+              </Button>
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.header>
   );
 }
