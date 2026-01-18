@@ -1,8 +1,9 @@
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Droplet, Hammer, Shield, Globe, ArrowRight } from "lucide-react";
+import { Droplet, Hammer, Shield, Globe, ArrowRight, Play } from "lucide-react";
+import { Link } from "react-router-dom";
 import Header from "@/components/Header";
 import ContactModal from "@/components/ContactModal";
 import ProjectsGallery from "@/components/ProjectsGallery";
@@ -13,7 +14,16 @@ import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
 import SectionHeader from "@/components/layout/SectionHeader";
 import heroImage from "@/assets/hero-infrastructure.jpg";
-import { fadeInUp, staggerContainer, viewportOnce } from "@/lib/animations";
+import { 
+  fadeInUp, 
+  fadeInLeft, 
+  fadeInRight, 
+  staggerContainer, 
+  staggerContainerSlow,
+  scaleIn,
+  slideUp,
+  viewportOnce 
+} from "@/lib/animations";
 
 const pillars = [
   {
@@ -76,19 +86,31 @@ export default function GoldenwareWebsite() {
     track("contact_modal_open");
   };
 
+  // Parallax scroll effect for hero
+  const { scrollY } = useScroll();
+  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
+  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0]);
+
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <Header onContactClick={handleContactClick} />
       <ContactModal isOpen={isContactOpen} onClose={() => setIsContactOpen(false)} />
 
       {/* HERO */}
       <section className="relative flex items-center justify-center text-center px-6 pt-32 pb-32 md:pt-44 md:pb-44 overflow-hidden min-h-screen">
-        {/* Hero background image */}
-        <div 
+        {/* Parallax Hero background image */}
+        <motion.div 
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: `url(${heroImage})` }}
+          style={{ 
+            backgroundImage: `url(${heroImage})`,
+            y: heroY,
+          }}
         />
         {/* Dark overlay with gradient */}
+        <motion.div 
+          className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" 
+          style={{ opacity: heroOpacity }}
+        />
         <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/70 to-background" />
         {/* Radial gold accent */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_hsl(var(--gold)/0.05)_0%,_transparent_70%)]" />
@@ -132,24 +154,25 @@ export default function GoldenwareWebsite() {
           >
             <Button 
               size="lg" 
-              className="glow-gold text-base px-8"
+              className="glow-gold text-base px-8 group"
               onClick={() => {
                 handleContactClick();
                 track("cta_partner_click", { location: "hero" });
               }}
             >
               Partner With Us
-              <ArrowRight className="ml-2" size={18} />
+              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={18} />
             </Button>
             <Button 
               size="lg" 
               variant="outline"
-              className="border-border hover:border-gold/50 hover:bg-gold/5 bg-background/50 backdrop-blur-sm text-base"
+              className="border-border hover:border-gold/50 hover:bg-gold/5 bg-background/50 backdrop-blur-sm text-base group"
               onClick={() => {
                 window.location.href = '/charter';
                 track("view_charter_click", { location: "hero" });
               }}
             >
+              <Play size={16} className="mr-2" />
               View Our Charter
             </Button>
           </motion.div>
@@ -186,18 +209,22 @@ export default function GoldenwareWebsite() {
           
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
-            variants={staggerContainer}
+            variants={staggerContainerSlow}
             initial="initial"
             whileInView="animate"
             viewport={viewportOnce}
           >
             {pillars.map((item, i) => (
               <motion.div key={i} variants={fadeInUp}>
-                <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group card-shadow hover:card-shadow-hover">
+                <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group card-shadow hover:card-shadow-hover hover:-translate-y-2">
                   <CardContent className="p-6 md:p-8">
-                    <div className="mb-5 text-gold group-hover:scale-110 transition-transform duration-300 inline-block">
+                    <motion.div 
+                      className="mb-5 text-gold inline-block"
+                      whileHover={{ scale: 1.2, rotate: 5 }}
+                      transition={{ type: "spring", stiffness: 400 }}
+                    >
                       <item.icon size={36} strokeWidth={1.5} />
-                    </div>
+                    </motion.div>
                     <h3 className="text-xl font-semibold mb-3 text-foreground">{item.title}</h3>
                     <p className="text-muted-foreground leading-relaxed font-sans">{item.text}</p>
                   </CardContent>
@@ -213,30 +240,45 @@ export default function GoldenwareWebsite() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_hsl(var(--gold)/0.03)_0%,_transparent_50%)]" />
         <motion.div 
           className="max-w-3xl mx-auto text-center relative z-10"
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={slideUp}
+          initial="initial"
+          whileInView="animate"
           viewport={viewportOnce}
-          transition={{ duration: 0.8 }}
         >
-          <h2 className="text-3xl md:text-5xl font-bold mb-8">Our Mandate</h2>
-          <p className="text-muted-foreground text-lg md:text-xl leading-relaxed font-sans">
+          <motion.h2 
+            className="text-3xl md:text-5xl font-bold mb-8"
+            variants={scaleIn}
+          >
+            Our Mandate
+          </motion.h2>
+          <motion.p 
+            className="text-muted-foreground text-lg md:text-xl leading-relaxed font-sans"
+            variants={fadeInUp}
+          >
             We treat materials as <span className="text-gold font-medium">trust</span>, water as{" "}
             <span className="text-gold font-medium">life</span>, and infrastructure as{" "}
             <span className="text-gold font-medium">destiny</span>.
             Goldenware exists to steward matter, skills, and systems so African communities
             can build resilient futures that endure.
-          </p>
-          <div className="mt-10 flex justify-center gap-4 flex-wrap">
-            <div className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans">
-              ISO 9001 Certified
-            </div>
-            <div className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans">
-              NCA Class 4
-            </div>
-            <div className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans">
-              KEBS Approved
-            </div>
-          </div>
+          </motion.p>
+          <motion.div 
+            className="mt-10 flex justify-center gap-4 flex-wrap"
+            variants={staggerContainer}
+            initial="initial"
+            whileInView="animate"
+            viewport={viewportOnce}
+          >
+            {["ISO 9001 Certified", "NCA Class 4", "KEBS Approved"].map((badge, i) => (
+              <motion.div
+                key={badge}
+                variants={scaleIn}
+                className="px-4 py-2 rounded-full bg-gold/10 border border-gold/20 text-gold text-sm font-medium font-sans"
+                whileHover={{ scale: 1.05, backgroundColor: "hsl(var(--gold) / 0.2)" }}
+              >
+                {badge}
+              </motion.div>
+            ))}
+          </motion.div>
         </motion.div>
       </section>
 
@@ -251,30 +293,39 @@ export default function GoldenwareWebsite() {
           
           <motion.div 
             className="grid grid-cols-1 md:grid-cols-3 gap-6"
-            variants={staggerContainer}
+            variants={staggerContainerSlow}
             initial="initial"
             whileInView="animate"
             viewport={viewportOnce}
           >
             {useCases.map((useCase, i) => (
               <motion.div key={i} variants={fadeInUp}>
-                <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group hover:-translate-y-1 card-shadow hover:card-shadow-hover">
-                  <CardContent className="p-8 md:p-10">
-                    <div className="w-12 h-1 bg-gold mb-6 group-hover:w-20 transition-all duration-300" />
-                    <h3 className="text-xl md:text-2xl font-semibold mb-4 text-foreground">{useCase.title}</h3>
-                    <p className="text-muted-foreground leading-relaxed mb-6 font-sans">
-                      {useCase.description}
-                    </p>
-                    <ul className="space-y-2">
-                      {useCase.features.map((feature, j) => (
-                        <li key={j} className="flex items-center gap-2 text-sm text-muted-foreground font-sans">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gold" />
-                          {feature}
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
+                <Link to="/services">
+                  <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group hover:-translate-y-2 card-shadow hover:card-shadow-hover cursor-pointer">
+                    <CardContent className="p-8 md:p-10">
+                      <motion.div 
+                        className="w-12 h-1 bg-gold mb-6"
+                        whileHover={{ width: 80 }}
+                        transition={{ duration: 0.3 }}
+                      />
+                      <h3 className="text-xl md:text-2xl font-semibold mb-4 text-foreground group-hover:text-gold transition-colors">{useCase.title}</h3>
+                      <p className="text-muted-foreground leading-relaxed mb-6 font-sans">
+                        {useCase.description}
+                      </p>
+                      <ul className="space-y-2">
+                        {useCase.features.map((feature, j) => (
+                          <li key={j} className="flex items-center gap-2 text-sm text-muted-foreground font-sans">
+                            <div className="w-1.5 h-1.5 rounded-full bg-gold" />
+                            {feature}
+                          </li>
+                        ))}
+                      </ul>
+                      <div className="mt-6 flex items-center text-gold text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
+                        Learn more <ArrowRight size={14} className="ml-2" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                </Link>
               </motion.div>
             ))}
           </motion.div>
@@ -302,28 +353,38 @@ export default function GoldenwareWebsite() {
         <div className="absolute inset-0 bg-gradient-to-t from-gold/5 via-transparent to-transparent pointer-events-none" />
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom,_hsl(var(--gold)/0.08)_0%,_transparent_60%)]" />
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
           viewport={viewportOnce}
-          transition={{ duration: 0.8 }}
           className="relative z-10 max-w-3xl mx-auto"
         >
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6">Build With Foresight</h2>
-          <p className="text-muted-foreground mb-10 text-lg md:text-xl leading-relaxed font-sans">
+          <motion.h2 
+            className="text-4xl md:text-5xl lg:text-6xl font-bold mb-6"
+            variants={slideUp}
+          >
+            Build With Foresight
+          </motion.h2>
+          <motion.p 
+            className="text-muted-foreground mb-10 text-lg md:text-xl leading-relaxed font-sans"
+            variants={fadeInUp}
+          >
             Whether you are a county, builder, investor, or community — partner with a steward,
             not just a supplier.
-          </p>
-          <Button 
-            size="lg" 
-            className="glow-gold text-lg px-10 py-6"
-            onClick={() => {
-              handleContactClick();
-              track("cta_start_conversation", { location: "footer_cta" });
-            }}
-          >
-            Start a Conversation
-            <ArrowRight className="ml-2" size={20} />
-          </Button>
+          </motion.p>
+          <motion.div variants={scaleIn}>
+            <Button 
+              size="lg" 
+              className="glow-gold text-lg px-10 py-6 group"
+              onClick={() => {
+                handleContactClick();
+                track("cta_start_conversation", { location: "footer_cta" });
+              }}
+            >
+              Start a Conversation
+              <ArrowRight className="ml-2 group-hover:translate-x-1 transition-transform" size={20} />
+            </Button>
+          </motion.div>
         </motion.div>
       </section>
 

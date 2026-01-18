@@ -11,7 +11,7 @@ interface HeaderProps {
 
 const navLinks = [
   { label: "About", href: "#about", isSection: true },
-  { label: "Services", href: "#services", isSection: true },
+  { label: "Services", href: "/services", isSection: false },
   { label: "Projects", href: "/projects", isSection: false },
   { label: "Charter", href: "/charter", isSection: false },
   { label: "Pricing", href: "/pricing", isSection: false },
