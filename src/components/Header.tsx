@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface HeaderProps {
   onContactClick: () => void;
@@ -11,7 +12,7 @@ interface HeaderProps {
 const navLinks = [
   { label: "About", href: "#about", isSection: true },
   { label: "Services", href: "#services", isSection: true },
-  { label: "Projects", href: "#projects", isSection: true },
+  { label: "Projects", href: "/projects", isSection: false },
   { label: "Charter", href: "/charter", isSection: false },
   { label: "Pricing", href: "/pricing", isSection: false },
   { label: "Blog", href: "/blog", isSection: false },
@@ -113,7 +114,8 @@ export default function Header({ onContactClick }: HeaderProps) {
               </Link>
             );
           })}
-          <Button size="sm" onClick={onContactClick} className="glow-gold ml-4">
+          <ThemeToggle />
+          <Button size="sm" onClick={onContactClick} className="glow-gold ml-2">
             Partner With Us
           </Button>
         </nav>
