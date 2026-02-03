@@ -8,7 +8,7 @@ import Header from "@/components/Header";
 import ContactModal from "@/components/ContactModal";
 import ProjectsGallery from "@/components/ProjectsGallery";
 import TeamSection from "@/components/TeamSection";
-import TestimonialsSection from "@/components/TestimonialsSection";
+import TestimonialsCarousel from "@/components/TestimonialsCarousel";
 import StatsSection from "@/components/StatsSection";
 import FAQSection from "@/components/FAQSection";
 import Footer from "@/components/Footer";
@@ -340,9 +340,9 @@ export default function GoldenwareWebsite() {
         <TeamSection />
       </div>
 
-      {/* TESTIMONIALS */}
+      {/* TESTIMONIALS CAROUSEL */}
       <div id="testimonials">
-        <TestimonialsSection />
+        <TestimonialsCarousel />
       </div>
 
       {/* FAQ */}

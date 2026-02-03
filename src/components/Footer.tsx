@@ -1,6 +1,11 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook } from "lucide-react";
+import { Mail, Phone, MapPin, Linkedin, Twitter, Facebook, Send, Loader2, CheckCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const footerLinks = {
   company: [
@@ -36,8 +41,92 @@ const contactInfo = [
 ];
 
 export default function Footer() {
+  const [email, setEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const handleNewsletterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!email || !email.includes("@")) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+
+    setIsLoading(true);
+    
+    try {
+      const { data, error } = await supabase.functions.invoke("subscribe", {
+        body: { email: email.trim() },
+      });
+
+      if (error) throw error;
+
+      setIsSubscribed(true);
+      setEmail("");
+      toast.success(data?.message || "Successfully subscribed!");
+      
+      // Reset success state after 5 seconds
+      setTimeout(() => setIsSubscribed(false), 5000);
+    } catch (error: any) {
+      console.error("Newsletter subscription error:", error);
+      toast.error(error.message || "Failed to subscribe. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-card border-t border-border">
+      {/* Newsletter Section */}
+      <div className="border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-12 md:py-16">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
+            <div>
+              <h3 className="text-2xl md:text-3xl font-bold mb-3">
+                Stay <span className="text-gradient-gold">Updated</span>
+              </h3>
+              <p className="text-muted-foreground font-sans max-w-md">
+                Subscribe to our newsletter for the latest project updates, industry insights, and infrastructure news from Kenya.
+              </p>
+            </div>
+            
+            <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3">
+              <div className="relative flex-1">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={18} />
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading || isSubscribed}
+                  className="pl-10 h-12 bg-background border-border focus:border-gold"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={isLoading || isSubscribed}
+                className="h-12 px-6 glow-gold group"
+              >
+                {isLoading ? (
+                  <Loader2 className="animate-spin" size={18} />
+                ) : isSubscribed ? (
+                  <>
+                    <CheckCircle size={18} className="mr-2" />
+                    Subscribed!
+                  </>
+                ) : (
+                  <>
+                    Subscribe
+                    <Send size={16} className="ml-2 group-hover:translate-x-1 transition-transform" />
+                  </>
+                )}
+              </Button>
+            </form>
+          </div>
+        </div>
+      </div>
+
       {/* Main Footer */}
       <div className="max-w-7xl mx-auto px-6 py-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-12">
