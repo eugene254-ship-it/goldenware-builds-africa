@@ -7,7 +7,9 @@ import ContactModal from '@/components/ContactModal';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
 import { Loader2, Calendar, ArrowRight, Mail } from 'lucide-react';
+import BlogCategoryFilter from '@/components/blog/BlogCategoryFilter';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 
@@ -19,6 +21,7 @@ interface BlogPost {
   cover_image: string | null;
   published_at: string | null;
   created_at: string;
+  category_id: string | null;
 }
 
 const fadeInUp = {
@@ -41,6 +44,7 @@ export default function Blog() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   const [email, setEmail] = useState('');
   const [isSubscribing, setIsSubscribing] = useState(false);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPosts();
@@ -48,11 +52,13 @@ export default function Blog() {
 
   const fetchPosts = async () => {
     try {
-      const { data, error } = await supabase
+      const query = supabase
         .from('blog_posts')
-        .select('id, title, slug, excerpt, cover_image, published_at, created_at')
+        .select('id, title, slug, excerpt, cover_image, published_at, created_at, category_id')
         .eq('published', true)
         .order('published_at', { ascending: false });
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setPosts(data || []);
@@ -154,6 +160,13 @@ export default function Blog() {
         </motion.div>
       </section>
 
+      {/* Category Filter */}
+      <section className="pb-8 px-6">
+        <div className="max-w-6xl mx-auto">
+          <BlogCategoryFilter selected={selectedCategory} onSelect={setSelectedCategory} />
+        </div>
+      </section>
+
       {/* Posts Grid */}
       <section className="pb-24 px-6">
         <div className="max-w-6xl mx-auto">
@@ -173,7 +186,9 @@ export default function Blog() {
               initial="initial"
               animate="animate"
             >
-              {posts.map((post) => (
+              {posts
+                .filter(p => !selectedCategory || p.category_id === selectedCategory)
+                .map((post) => (
                 <motion.div key={post.id} variants={fadeInUp}>
                   <Link to={`/blog/${post.slug}`}>
                     <Card className="bg-card border-border h-full hover:border-gold/30 transition-all duration-300 group overflow-hidden">

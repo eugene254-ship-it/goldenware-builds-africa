@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X } from "lucide-react";
+import { Menu, X, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useAuth } from "@/hooks/useAuth";
 
 interface HeaderProps {
   onContactClick: () => void;
@@ -24,6 +25,7 @@ export default function Header({ onContactClick }: HeaderProps) {
   const [activeSection, setActiveSection] = useState<string | null>(null);
   const location = useLocation();
   const isHomePage = location.pathname === "/";
+  const { user } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -114,6 +116,15 @@ export default function Header({ onContactClick }: HeaderProps) {
               </Link>
             );
           })}
+          {user && (
+            <Link
+              to="/dashboard"
+              className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 font-sans flex items-center gap-1.5"
+            >
+              <User size={14} />
+              Dashboard
+            </Link>
+          )}
           <ThemeToggle />
           <Button size="sm" onClick={onContactClick} className="glow-gold ml-2">
             Partner With Us

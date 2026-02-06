@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowLeft, MapPin, Calendar, ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, MapPin, Calendar, ArrowRight, CheckCircle2, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
@@ -11,6 +11,7 @@ import ContactModal from "@/components/ContactModal";
 import OptimizedImage from "@/components/ui/optimized-image";
 import { getProjectById, projects } from "@/data/projects";
 import { fadeInUp, staggerContainer, viewportOnce } from "@/lib/animations";
+import { useSaveProject } from "@/hooks/useSaveProject";
 
 export default function ProjectDetail() {
   const { id } = useParams<{ id: string }>();
@@ -18,7 +19,7 @@ export default function ProjectDetail() {
   const [isContactOpen, setIsContactOpen] = useState(false);
   
   const project = id ? getProjectById(id) : undefined;
-
+  const { isSaved, isLoading: saveLoading, toggle: toggleSave } = useSaveProject(id || '');
   useEffect(() => {
     if (!project && id) {
       navigate("/projects");
@@ -88,6 +89,16 @@ export default function ProjectDetail() {
                 <Calendar size={18} className="text-gold" />
                 {project.year}
               </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={toggleSave}
+                disabled={saveLoading}
+                className={isSaved ? 'border-gold text-gold' : ''}
+              >
+                <Bookmark size={16} className={`mr-1.5 ${isSaved ? 'fill-gold' : ''}`} />
+                {isSaved ? 'Saved' : 'Save Project'}
+              </Button>
             </div>
           </motion.div>
         </div>
