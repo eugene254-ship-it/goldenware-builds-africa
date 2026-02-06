@@ -29,8 +29,10 @@ import {
   Calendar,
   Building,
   Plus,
-  Shield
+  Shield,
+  BarChart3
 } from 'lucide-react';
+import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import { format } from 'date-fns';
 
 interface ContactSubmission {
@@ -309,12 +311,24 @@ export default function Admin() {
             </Card>
           </div>
 
-          <Tabs defaultValue="submissions" className="space-y-6">
+          <Tabs defaultValue="analytics" className="space-y-6">
             <TabsList className="bg-secondary">
+              <TabsTrigger value="analytics">
+                <BarChart3 size={14} className="mr-1.5" />
+                Analytics
+              </TabsTrigger>
               <TabsTrigger value="submissions">Contact Submissions</TabsTrigger>
               <TabsTrigger value="blog">Blog Posts</TabsTrigger>
               <TabsTrigger value="subscribers">Subscribers</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="analytics">
+              <AnalyticsDashboard
+                submissions={submissions}
+                subscribers={subscribers}
+                blogPosts={blogPosts}
+              />
+            </TabsContent>
 
             <TabsContent value="submissions" className="space-y-4">
               {/* Filters */}
