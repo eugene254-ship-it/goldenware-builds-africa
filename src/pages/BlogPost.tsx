@@ -4,8 +4,10 @@ import { motion } from 'framer-motion';
 import { supabase } from '@/integrations/supabase/client';
 import Header from '@/components/Header';
 import ContactModal from '@/components/ContactModal';
+import BlogComments from '@/components/blog/BlogComments';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Loader2, Calendar, ArrowLeft, User } from 'lucide-react';
+import { Loader2, Calendar, ArrowLeft } from 'lucide-react';
 import { format } from 'date-fns';
 
 interface BlogPostData {
@@ -16,12 +18,21 @@ interface BlogPostData {
   published_at: string | null;
   created_at: string;
   author_id: string | null;
+  category_id: string | null;
+}
+
+interface TagData {
+  id: string;
+  name: string;
+  slug: string;
 }
 
 export default function BlogPost() {
   const { slug } = useParams();
   const navigate = useNavigate();
   const [post, setPost] = useState<BlogPostData | null>(null);
+  const [tags, setTags] = useState<TagData[]>([]);
+  const [categoryName, setCategoryName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isContactOpen, setIsContactOpen] = useState(false);
 
@@ -33,7 +44,7 @@ export default function BlogPost() {
     try {
       const { data, error } = await supabase
         .from('blog_posts')
-        .select('id, title, content, cover_image, published_at, created_at, author_id')
+        .select('id, title, content, cover_image, published_at, created_at, author_id, category_id')
         .eq('slug', slug)
         .eq('published', true)
         .maybeSingle();
@@ -46,6 +57,31 @@ export default function BlogPost() {
       }
 
       setPost(data);
+
+      // Fetch category
+      if (data.category_id) {
+        const { data: cat } = await supabase
+          .from('blog_categories')
+          .select('name')
+          .eq('id', data.category_id)
+          .maybeSingle();
+        if (cat) setCategoryName(cat.name);
+      }
+
+      // Fetch tags
+      const { data: postTags } = await supabase
+        .from('blog_post_tags')
+        .select('tag_id')
+        .eq('post_id', data.id);
+
+      if (postTags && postTags.length > 0) {
+        const tagIds = postTags.map(t => t.tag_id);
+        const { data: tagData } = await supabase
+          .from('blog_tags')
+          .select('id, name, slug')
+          .in('id', tagIds);
+        setTags(tagData || []);
+      }
     } catch (error) {
       console.error('Error fetching post:', error);
       navigate('/blog');
@@ -118,7 +154,7 @@ export default function BlogPost() {
               </div>
             )}
 
-            <div className="flex items-center gap-4 text-sm text-muted-foreground mb-6">
+            <div className="flex flex-wrap items-center gap-3 text-sm text-muted-foreground mb-6">
               <span className="flex items-center gap-1">
                 <Calendar size={14} />
                 <time>
@@ -128,6 +164,12 @@ export default function BlogPost() {
                   )}
                 </time>
               </span>
+              {categoryName && (
+                <Badge variant="outline" className="text-gold border-gold/30">{categoryName}</Badge>
+              )}
+              {tags.map(tag => (
+                <Badge key={tag.id} variant="secondary" className="text-xs">{tag.name}</Badge>
+              ))}
             </div>
 
             <h1 className="text-3xl md:text-5xl font-bold mb-8">{post.title}</h1>
@@ -135,6 +177,9 @@ export default function BlogPost() {
             <div className="prose prose-invert prose-gold max-w-none text-foreground/90">
               {renderContent(post.content)}
             </div>
+
+            {/* Comments */}
+            <BlogComments postId={post.id} />
           </motion.div>
 
           {/* CTA */}
