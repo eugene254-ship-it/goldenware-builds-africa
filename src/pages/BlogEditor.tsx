@@ -9,8 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { ArrowLeft, Loader2, Save, Trash2, Upload, Image, Bell } from 'lucide-react';
+import { ArrowLeft, Loader2, Save, Trash2, Upload, Bell, X, Plus } from 'lucide-react';
 
 export default function BlogEditor() {
   const { id } = useParams();
@@ -26,6 +28,11 @@ export default function BlogEditor() {
   const [coverImage, setCoverImage] = useState('');
   const [published, setPublished] = useState(false);
   const [wasPublished, setWasPublished] = useState(false);
+  const [categoryId, setCategoryId] = useState<string>('');
+  const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
+  const [allTags, setAllTags] = useState<{ id: string; name: string; slug: string }[]>([]);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
+  const [newTagName, setNewTagName] = useState('');
   const [isLoading, setIsLoading] = useState(!isNew);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
@@ -38,10 +45,20 @@ export default function BlogEditor() {
   }, [user, authLoading, navigate]);
 
   useEffect(() => {
+    fetchCategoriesAndTags();
     if (!isNew && user && isAdmin) {
       fetchPost();
     }
   }, [id, user, isAdmin, isNew]);
+
+  const fetchCategoriesAndTags = async () => {
+    const [catRes, tagRes] = await Promise.all([
+      supabase.from('blog_categories').select('id, name').order('name'),
+      supabase.from('blog_tags').select('id, name, slug').order('name'),
+    ]);
+    if (catRes.data) setCategories(catRes.data);
+    if (tagRes.data) setAllTags(tagRes.data);
+  };
 
   const fetchPost = async () => {
     try {
@@ -60,6 +77,16 @@ export default function BlogEditor() {
       setCoverImage(data.cover_image || '');
       setPublished(data.published);
       setWasPublished(data.published);
+      setCategoryId(data.category_id || '');
+
+      // Fetch post tags
+      const { data: postTags } = await supabase
+        .from('blog_post_tags')
+        .select('tag_id')
+        .eq('post_id', data.id);
+      if (postTags) {
+        setSelectedTagIds(postTags.map(t => t.tag_id));
+      }
     } catch (error) {
       console.error('Error fetching post:', error);
       toast.error('Failed to load post');
@@ -124,6 +151,26 @@ export default function BlogEditor() {
     }
   };
 
+  const handleAddTag = async () => {
+    if (!newTagName.trim()) return;
+    const slug = newTagName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+    try {
+      const { data, error } = await supabase
+        .from('blog_tags')
+        .insert({ name: newTagName.trim(), slug })
+        .select('id, name, slug')
+        .single();
+      if (error) throw error;
+      setAllTags(prev => [...prev, data]);
+      setSelectedTagIds(prev => [...prev, data.id]);
+      setNewTagName('');
+      toast.success(`Tag "${data.name}" created`);
+    } catch (error: any) {
+      if (error.code === '23505') toast.error('Tag already exists');
+      else toast.error('Failed to create tag');
+    }
+  };
+
   const handleSave = async () => {
     if (!title.trim() || !content.trim() || !slug.trim()) {
       toast.error('Title, slug, and content are required');
@@ -142,16 +189,30 @@ export default function BlogEditor() {
         published,
         published_at: published ? new Date().toISOString() : null,
         author_id: user?.id,
+        category_id: categoryId || null,
       };
 
+      let postId = id;
+
       if (isNew) {
-        const { error } = await supabase.from('blog_posts').insert(postData);
+        const { data, error } = await supabase.from('blog_posts').insert(postData).select('id').single();
         if (error) throw error;
+        postId = data.id;
         toast.success('Post created successfully');
       } else {
         const { error } = await supabase.from('blog_posts').update(postData).eq('id', id);
         if (error) throw error;
         toast.success('Post updated successfully');
+      }
+
+      // Sync tags
+      if (postId) {
+        await supabase.from('blog_post_tags').delete().eq('post_id', postId);
+        if (selectedTagIds.length > 0) {
+          await supabase.from('blog_post_tags').insert(
+            selectedTagIds.map(tag_id => ({ post_id: postId!, tag_id }))
+          );
+        }
       }
 
       navigate('/admin');
@@ -374,6 +435,61 @@ export default function BlogEditor() {
                   rows={2}
                   className="bg-secondary border-border resize-none"
                 />
+              </div>
+
+              {/* Category & Tags */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Category</Label>
+                  <Select value={categoryId} onValueChange={setCategoryId}>
+                    <SelectTrigger className="bg-secondary border-border">
+                      <SelectValue placeholder="Select a category" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {categories.map(cat => (
+                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tags</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newTagName}
+                      onChange={(e) => setNewTagName(e.target.value)}
+                      placeholder="New tag name..."
+                      className="bg-secondary border-border"
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); handleAddTag(); } }}
+                    />
+                    <Button type="button" variant="outline" size="sm" onClick={handleAddTag} className="border-border shrink-0">
+                      <Plus size={14} className="mr-1" /> Add
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 mt-2">
+                    {allTags.map(tag => {
+                      const isSelected = selectedTagIds.includes(tag.id);
+                      return (
+                        <Badge
+                          key={tag.id}
+                          variant={isSelected ? 'default' : 'outline'}
+                          className={`cursor-pointer transition-colors ${
+                            isSelected ? 'bg-gold text-background hover:bg-gold/80' : 'hover:border-gold/50'
+                          }`}
+                          onClick={() => {
+                            setSelectedTagIds(prev =>
+                              isSelected ? prev.filter(id => id !== tag.id) : [...prev, tag.id]
+                            );
+                          }}
+                        >
+                          {tag.name}
+                          {isSelected && <X size={12} className="ml-1" />}
+                        </Badge>
+                      );
+                    })}
+                  </div>
+                </div>
               </div>
 
               <div className="space-y-2">
