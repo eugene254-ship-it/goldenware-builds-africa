@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, User } from "lucide-react";
+import { Menu, X, User, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { ThemeToggle } from "@/components/ThemeToggle";
@@ -117,13 +117,30 @@ export default function Header({ onContactClick }: HeaderProps) {
             );
           })}
           {user && (
-            <Link
-              to="/dashboard"
-              className="px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all duration-200 font-sans flex items-center gap-1.5"
-            >
-              <User size={14} />
-              Dashboard
-            </Link>
+            <>
+              <Link
+                to="/portal"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 font-sans flex items-center gap-1.5 ${
+                  location.pathname === '/portal'
+                    ? 'text-gold bg-gold/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <Briefcase size={14} />
+                Portal
+              </Link>
+              <Link
+                to="/dashboard"
+                className={`px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200 font-sans flex items-center gap-1.5 ${
+                  location.pathname === '/dashboard'
+                    ? 'text-gold bg-gold/10'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
+                }`}
+              >
+                <User size={14} />
+                Dashboard
+              </Link>
+            </>
           )}
           <ThemeToggle />
           <Button size="sm" onClick={onContactClick} className="glow-gold ml-2">
@@ -172,6 +189,24 @@ export default function Header({ onContactClick }: HeaderProps) {
                   </Link>
                 )
               ))}
+              {user && (
+                <>
+                  <Link
+                    to="/portal"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-foreground hover:text-gold hover:bg-muted/50 transition-colors text-left py-3 px-4 rounded-lg text-lg font-medium font-sans flex items-center gap-2"
+                  >
+                    <Briefcase size={18} /> Portal
+                  </Link>
+                  <Link
+                    to="/dashboard"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="text-foreground hover:text-gold hover:bg-muted/50 transition-colors text-left py-3 px-4 rounded-lg text-lg font-medium font-sans flex items-center gap-2"
+                  >
+                    <User size={18} /> Dashboard
+                  </Link>
+                </>
+              )}
               <Button onClick={onContactClick} className="glow-gold mt-4">
                 Partner With Us
               </Button>
