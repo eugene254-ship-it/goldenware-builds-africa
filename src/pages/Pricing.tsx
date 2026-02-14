@@ -1,8 +1,12 @@
+import { useState } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
-import { ArrowLeft, Check, Building, Users, Droplet, Wrench } from "lucide-react";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft, Check, Building, Users, Droplet, Wrench, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
 
 const pricingTiers = [
   {
@@ -95,7 +99,45 @@ const faqItems = [
   },
 ];
 
+// Stripe price IDs for service packages
+const COMMUNITY_PRICE_ID = "price_1T0cDkP68A80rUwDMXIsGHuH";
+
 export default function PricingPage() {
+  const { user } = useAuth();
+  const [searchParams] = useSearchParams();
+  const [loadingTier, setLoadingTier] = useState<string | null>(null);
+
+  // Show toast if redirected from payment
+  useState(() => {
+    const payment = searchParams.get('payment');
+    if (payment === 'cancelled') {
+      toast.info('Payment was cancelled');
+    }
+  });
+
+  const handleCheckout = async (tierName: string) => {
+    if (!user) {
+      toast.error('Please log in to proceed with payment');
+      return;
+    }
+
+    setLoadingTier(tierName);
+    try {
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: { priceId: COMMUNITY_PRICE_ID, serviceName: tierName },
+      });
+
+      if (error) throw error;
+      if (data?.url) {
+        window.open(data.url, '_blank');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      toast.error('Failed to start checkout');
+    } finally {
+      setLoadingTier(null);
+    }
+  };
   return (
     <div className="min-h-screen bg-background text-foreground">
       {/* Header */}
@@ -172,7 +214,12 @@ export default function PricingPage() {
                     <Button 
                       className={`w-full ${tier.popular ? 'glow-gold' : ''}`} 
                       variant={tier.popular ? 'default' : 'outline'}
+                      onClick={() => handleCheckout(tier.name)}
+                      disabled={loadingTier === tier.name}
                     >
+                      {loadingTier === tier.name ? (
+                        <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                      ) : null}
                       {tier.cta}
                     </Button>
                   </CardContent>
